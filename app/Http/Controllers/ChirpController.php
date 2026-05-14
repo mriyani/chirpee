@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ChirpController extends Controller
 {
@@ -11,23 +12,17 @@ class ChirpController extends Controller
      */
     public function index()
     {
-        $chirps = [
-            [
-                'author' => 'Jane Doe',
-                'message' => 'Just deployed my first Laravel app! 🚀',
-                'time' => '5 minutes ago'
-            ],
-            [
-                'author' => 'John Smith',
-                'message' => 'Laravel makes web development fun again!',
-                'time' => '1 hour ago'
-            ],
-            [
-                'author' => 'Alice Johnson',
-                'message' => 'Working on something cool with Chirper...',
-                'time' => '3 hours ago'
-            ]
-        ];
+        // Fetch chirps with optional user data (LEFT JOIN handles nullable user_id)
+        $chirps = DB::table('chirps')
+            ->leftJoin('users', 'chirps.user_id', '=', 'users.id')
+            ->select(
+                'chirps.id',
+                'chirps.message',
+                'chirps.created_at',
+                'users.name as author_name' // fallback to 'Anonymous' if null
+            )
+            ->orderBy('chirps.created_at', 'desc')
+            ->paginate(10); // or ->get() for all records
 
         return view('home', ['chirps' => $chirps]);
     }
