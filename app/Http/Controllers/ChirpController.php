@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chirp;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ChirpController extends Controller
 {
@@ -12,17 +12,10 @@ class ChirpController extends Controller
      */
     public function index()
     {
-        // Fetch chirps with optional user data (LEFT JOIN handles nullable user_id)
-        $chirps = DB::table('chirps')
-            ->leftJoin('users', 'chirps.user_id', '=', 'users.id')
-            ->select(
-                'chirps.id',
-                'chirps.message',
-                'chirps.created_at',
-                'users.name as author_name' // fallback to 'Anonymous' if null
-            )
-            ->orderBy('chirps.created_at', 'desc')
-            ->paginate(10); // or ->get() for all records
+        $chirps = Chirp::with('user')
+            ->latest()
+            ->take(50)  // Limit to 50 most recent chirps
+            ->get();
 
         return view('home', ['chirps' => $chirps]);
     }
